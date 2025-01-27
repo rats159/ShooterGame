@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using Shooter.Render.Shaders.Parsing;
 
-namespace Shooter.Render;
+namespace Shooter.Render.Shaders;
 
 public class Shader
 {
@@ -62,6 +63,14 @@ public class Shader
         GL.DetachShader(this._handle, fragmentId);
         GL.DeleteShader(vertexId);
         GL.DeleteShader(fragmentId);
+
+        ShaderParser vertexParser = new(vertexSource);
+        List<GlslToken> tokens = vertexParser.Parse();
+        Console.WriteLine(tokens.Count);
+        foreach (GlslToken token in tokens)
+        {
+            Console.WriteLine(token);
+        }
     }
     
     ~Shader()

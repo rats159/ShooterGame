@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using Shooter.Render.Shaders;
 
 namespace Shooter.Render;
 

@@ -2,6 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Shooter.Structures;
+using Shooter.Render.Shaders;
 
 namespace Shooter.Render;
 
