@@ -1,9 +1,12 @@
-﻿namespace Shooter;
+﻿using Shooter.Render;
+
+namespace Shooter;
 
 internal static class Program
 {
     public static void Main()
     {
-        Console.WriteLine("Hello, World!");
+        using ShooterGameWindow game = new();
+        game.Run();
     }
 }
