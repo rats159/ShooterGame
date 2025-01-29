@@ -1,5 +1,4 @@
 ﻿using OpenTK.Graphics.OpenGL;
-using Shooter.Render.Shaders.Parsing;
 
 namespace Shooter.Render.Shaders;
 
@@ -8,6 +7,9 @@ public class Shader
     private bool isDisposed;
     private readonly int _handle;
     private readonly string _name;
+    
+    public int NumVertexAttribs { get; }
+
 
     public Shader(string name)
     {
@@ -64,13 +66,7 @@ public class Shader
         GL.DeleteShader(vertexId);
         GL.DeleteShader(fragmentId);
 
-        ShaderParser vertexParser = new(vertexSource);
-        List<GlslToken> tokens = vertexParser.Parse();
-        Console.WriteLine(tokens.Count);
-        foreach (GlslToken token in tokens)
-        {
-            Console.WriteLine(token);
-        }
+        this.NumVertexAttribs = GL.GetProgrami(this._handle, ProgramProperty.ActiveAttributes);
     }
     
     ~Shader()
@@ -78,6 +74,14 @@ public class Shader
         if (!this.isDisposed)
         {
             Console.WriteLine($"Shader {this._name} was not cleaned up!");
+        }
+    }
+
+    public void Enable()
+    {
+        for (uint i = 0; i < this.NumVertexAttribs; i++)
+        {
+            GL.EnableVertexAttribArray(i);
         }
     }
     
@@ -93,4 +97,5 @@ public class Shader
         GL.DeleteProgram(this._handle);
         this.isDisposed = true;
     }
+    
 }

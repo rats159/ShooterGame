@@ -19,7 +19,7 @@ public class Renderer(Shader shader)
         foreach(Quad quad in this._quads)
         {
             GL.BindVertexArray(quad.VaoId);
-            GL.EnableVertexAttribArray(0);
+            shader.Enable();
             GL.DrawElements(PrimitiveType.Triangles, quad.IndexCount,DrawElementsType.UnsignedInt, 0);
         }
         
