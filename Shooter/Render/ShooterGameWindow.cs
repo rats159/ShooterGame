@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using Shooter.Entities;
 using Shooter.Structures;
 using Shooter.Render.Shaders;
 
@@ -28,20 +29,19 @@ public class ShooterGameWindow() : GameWindow(
     private int _fullRectVbo;
     private int _fullRectVao;
 
+    private readonly Camera _cam = new();
 
     // No code in this class should run before `OnLoad()`, so it's safe to ignore nullability.
     private Shader _fboDrawer = null!;
     private Framebuffer _fbo = null!;
-    private Renderer _renderer = null!;
+    private EntityRenderer _entityRenderer = null!;
 
     protected override void OnLoad()
     {
         base.OnLoad();
         this.WindowState = WindowState.Maximized;
         this._fbo = new();
-
-        GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
+        
         this._fullRectVbo = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, this._fullRectVbo);
         GL.BufferData(
@@ -56,10 +56,14 @@ public class ShooterGameWindow() : GameWindow(
         GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
         GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 2 * sizeof(float));
 
-
         this._fboDrawer = new("fbo_drawer");
-        this._renderer = new(new("shader"));
-        this._renderer.AddQuad(new());
+        this._entityRenderer = new();
+        Entity test = new Entity()
+        {
+            Scale = (5,1),
+            Pos = (ShooterGameWindow.PIXELS_X / 2f, ShooterGameWindow.PIXELS_Y / 2f)
+        };
+        this._entityRenderer.AddEntity(test);
     }
 
     protected override void OnRenderFrame(FrameEventArgs e)
@@ -68,13 +72,15 @@ public class ShooterGameWindow() : GameWindow(
 
         this._fbo.BindFramebuffer();
         GL.Viewport(0, 0, ShooterGameWindow.PIXELS_X, ShooterGameWindow.PIXELS_Y);
+        GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         GL.Clear(ClearBufferMask.ColorBufferBit);
 
-        this._renderer.Render();
+        this._entityRenderer.Render(this._cam);
 
         this._fbo.UnbindFramebuffer();
 
         GL.Viewport(this._viewport.X, this._viewport.Y, this._viewport.W, this._viewport.H);
+        GL.ClearColor(0,0,0,1);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         this._fboDrawer.Use();
         this._fbo.BindTexture();

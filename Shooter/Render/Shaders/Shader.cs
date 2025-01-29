@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 
 namespace Shooter.Render.Shaders;
 
@@ -9,7 +10,7 @@ public class Shader
     private readonly string _name;
     
     public int NumVertexAttribs { get; }
-
+    private readonly Dictionary<string, Uniform> _uniformLocations = [];
 
     public Shader(string name)
     {
@@ -67,6 +68,16 @@ public class Shader
         GL.DeleteShader(fragmentId);
 
         this.NumVertexAttribs = GL.GetProgrami(this._handle, ProgramProperty.ActiveAttributes);
+        int maxsize = GL.GetProgrami(this._handle, ProgramProperty.ActiveUniformMaxLength);
+        int uniformCount = GL.GetProgrami(this._handle, ProgramProperty.ActiveUniforms);
+        
+        for (uint i = 0; i < uniformCount; i++)
+        {
+            GL.GetActiveUniform(this._handle, i, maxsize, out _, out _, out UniformType type,
+                out string uniformName);
+            int loc = GL.GetUniformLocation(this._handle, uniformName);
+            this._uniformLocations[uniformName] = new(uniformName,loc,type);
+        }
     }
     
     ~Shader()
@@ -97,5 +108,19 @@ public class Shader
         GL.DeleteProgram(this._handle);
         this.isDisposed = true;
     }
-    
+
+    public void LoadMat4(string location, Matrix4 mat)
+    {
+        if (!this._uniformLocations.TryGetValue(location, out Uniform? value))
+        {
+            throw new ArgumentException($"Shader {this._name} has no uniform named {location}");
+        }
+
+        if (value.Type != UniformType.FloatMat4)
+        {
+            throw new ArgumentException($"Shader {this._name}'s uniform {value.Name} requires type {value.Type}, not Mat4");
+        }
+        
+        GL.UniformMatrix4f(value.Location,1,false,in mat);
+    }
 }
