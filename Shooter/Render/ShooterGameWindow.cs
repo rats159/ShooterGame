@@ -60,7 +60,7 @@ public class ShooterGameWindow() : GameWindow(
         this._entityRenderer = new();
         Entity test = new Entity()
         {
-            Scale = (5,1),
+            Scale = (50,50),
             Pos = (ShooterGameWindow.PIXELS_X / 2f, ShooterGameWindow.PIXELS_Y / 2f)
         };
         this._entityRenderer.AddEntity(test);

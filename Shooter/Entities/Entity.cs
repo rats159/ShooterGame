@@ -1,11 +1,12 @@
 using OpenTK.Mathematics;
 using Shooter.Render;
+using Shooter.Render.Quads;
 
 namespace Shooter.Entities;
 
 public class Entity
 {
-    private static readonly Quad Quad = new();
+    private static readonly Quad Quad = new UvQuad();
     public Matrix4 ModelMatrix { get; private set; }
     public Quad Model { get; }
 

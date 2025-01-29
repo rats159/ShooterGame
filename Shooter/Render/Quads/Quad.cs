@@ -1,17 +1,9 @@
 ﻿using OpenTK.Graphics.OpenGL;
 
-namespace Shooter.Render;
+namespace Shooter.Render.Quads;
 
-public class Quad
+public abstract class Quad
 {
-    private readonly float[] _vertices =
-    [
-        0f, 0f,
-        0f, 1f,
-        1f, 0f,
-        1f, 1f,
-    ];
-
     // Is this necessary? 
     private readonly uint[] _indices =
     [
@@ -22,22 +14,26 @@ public class Quad
     public int VaoId { get; }
     public int IndexCount => this._indices.Length;
 
-    public Quad()
+    protected abstract float[] GetVertices();
+    protected abstract void BindAttribs();
+    
+    protected Quad()
     {
         this.VaoId = GL.GenVertexArray();
         GL.BindVertexArray(this.VaoId);
 
         int vboId = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, vboId);
+        float[] vertices = this.GetVertices();
         GL.BufferData(
             BufferTarget.ArrayBuffer,
-            this._vertices.Length * sizeof(float),
-            this._vertices,
+            vertices.Length * sizeof(float),
+            vertices,
             BufferUsage.StaticDraw
         );
 
-        GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
-
+        this.BindAttribs();
+        
         int eboId = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, eboId);
         GL.BufferData(
@@ -47,4 +43,6 @@ public class Quad
             BufferUsage.StaticDraw
         );
     }
+    
+    
 }

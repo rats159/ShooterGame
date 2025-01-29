@@ -25,8 +25,6 @@ public class EntityRenderer
         
         foreach(Entity ent in this._ents)
         {
-            ent.ScaleY = 1+(float)(Math.Sin(GLFW.GetTime()*5) * 25f);
-            ent.Rotation += 0.5f;
             GL.BindVertexArray(ent.Model.VaoId);
             this._shader.Enable();
             this._shader.LoadMat4("u_Transform", ent.ModelMatrix);
