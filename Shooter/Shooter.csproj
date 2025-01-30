@@ -10,12 +10,17 @@
 
     <ItemGroup>
       <PackageReference Include="OpenTK" Version="5.0.0-pre.13" />
+      <PackageReference Include="StbImageSharp" Version="2.30.15" />
     </ItemGroup>
 
     <ItemGroup>
       <None Update="resources\**\*">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="resources\texture\" />
     </ItemGroup>
 
 </Project>

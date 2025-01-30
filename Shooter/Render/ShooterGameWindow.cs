@@ -18,6 +18,8 @@ public class ShooterGameWindow() : GameWindow(
     new() { ClientSize = (ShooterGameWindow.PIXELS_X, ShooterGameWindow.PIXELS_Y), Title = "Shooter" }
 )
 {
+    private double _startRender;
+    
     public static event Action WhenLoaded = () => { };
     public static TimeSpan FrameDelta { get; private set; } = TimeSpan.Zero;
 
@@ -49,6 +51,7 @@ public class ShooterGameWindow() : GameWindow(
     {
         base.OnLoad();
         this.WindowState = WindowState.Maximized;
+        this.VSync = VSyncMode.On;
         this._fbo = new();
 
         this._fullRectVbo = GL.GenBuffer();
@@ -73,20 +76,30 @@ public class ShooterGameWindow() : GameWindow(
 
         ShooterGameWindow.WhenLoaded.Invoke();
 
-        ushort testEntity = BasicRenderableEntity.Create(
-            ShooterGameWindow.PIXELS_X / 2f,
-            ShooterGameWindow.PIXELS_Y / 2f,
-            10,
-            10,
-            0
-        );
+        Texture tex = new("face");
+        
+        for(int j = -3; j < 4; j++)
+        {
+            for (int i = -5; i < 6; i++)
+            {
+                BasicRenderableEntity.Create(
+                    tex,
+                    ShooterGameWindow.PIXELS_X / 2f + i * 32,
+                    ShooterGameWindow.PIXELS_Y / 2f + j * 32,
+                    16,
+                    16
+                );
+            }
+        }
         ushort camera = EntityManager.New();
         EntityManager.AddComponent(camera, new CameraComponent());
     }
 
     protected override void OnRenderFrame(FrameEventArgs e)
     {
-        double startRender = GLFW.GetTime();
+        ShooterGameWindow.FrameDelta = TimeSpan.FromSeconds(GLFW.GetTime() - this._startRender);
+        Console.WriteLine(FrameDelta.TotalMilliseconds);
+        this._startRender = GLFW.GetTime();
         base.OnRenderFrame(e);
 
         this._fbo.BindFramebuffer();
@@ -113,8 +126,7 @@ public class ShooterGameWindow() : GameWindow(
         GL.EnableVertexAttribArray(0);
         GL.EnableVertexAttribArray(1);
         GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
-
-        ShooterGameWindow.FrameDelta = TimeSpan.FromSeconds(GLFW.GetTime() - startRender);
+        
         this.SwapBuffers();
     }
 

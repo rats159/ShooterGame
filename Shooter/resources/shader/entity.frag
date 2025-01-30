@@ -3,7 +3,12 @@ out vec4 FragColor;
 
 in vec2 f_Uv;
 
+uniform sampler2D u_Tex;
+
 void main()
 {
-    FragColor = vec4(f_Uv, 0.0f, 1.0f);
+    vec4 color = texture(u_Tex,f_Uv);
+    FragColor = color;
+    
+    if(color.a < 0.5) discard;
 }

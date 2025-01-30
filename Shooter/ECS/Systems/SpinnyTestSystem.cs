@@ -8,7 +8,7 @@ public class SpinnyTestSystem : ISystem
     {
         foreach (RotationComponent rot in EntityManager.GetComponents<RotationComponent>())
         {
-            rot.Turn((float)delta.TotalMilliseconds / 100f);
+            rot.Turn((float)delta.TotalMilliseconds / 5f);
         }
     }
 }

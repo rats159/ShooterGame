@@ -1,11 +1,12 @@
 ﻿using Shooter.ECS.Components;
+using Shooter.Render;
 using Shooter.Render.Quads;
 
 namespace Shooter.ECS.Prefabs;
 
 public static class BasicRenderableEntity
 {
-    public static ushort Create(float x = 0, float y = 0, float sx = 1, float sy = 1, int degrees = 0)
+    public static ushort Create(Texture texture,float x = 0, float y = 0, float sx = 1, float sy = 1, int degrees = 0)
     {
         ushort id = EntityManager.New();
         
@@ -14,6 +15,7 @@ public static class BasicRenderableEntity
         EntityManager.AddComponent(id,new ScaleComponent(sx,sy));
         EntityManager.AddComponent(id,new RotationComponent(degrees));
         EntityManager.AddComponent(id,new RenderComponent());
+        EntityManager.AddComponent(id,new TextureComponent(texture));
 
         return id;
     }

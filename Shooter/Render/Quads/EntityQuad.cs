@@ -4,7 +4,6 @@ namespace Shooter.Render.Quads;
 
 public class EntityQuad : Quad
 {
-
     static EntityQuad()
     {
         Console.WriteLine("static constructor!");
@@ -25,10 +24,10 @@ public class EntityQuad : Quad
     {
         return
         [
-            0, 0, 0, 0,
-            1, 0, 0, 1,
-            0, 1, 1, 0,
-            1, 1, 1, 1
+            -.5f, -.5f, 0, 0,
+             .5f, -.5f, 0, 1,
+            -.5f,  .5f, 1, 0,
+             .5f,  .5f, 1, 1
         ];
     }
 
