@@ -1,9 +1,15 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
-using Shooter.Entities;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using Shooter.ECS;
+using Shooter.ECS.Components;
+using Shooter.ECS.Prefabs;
+using Shooter.ECS.Systems;
+using Shooter.Render.Quads;
 using Shooter.Structures;
 using Shooter.Render.Shaders;
+using Shooter.Utility;
 
 namespace Shooter.Render;
 
@@ -12,16 +18,21 @@ public class ShooterGameWindow() : GameWindow(
     new() { ClientSize = (ShooterGameWindow.PIXELS_X, ShooterGameWindow.PIXELS_Y), Title = "Shooter" }
 )
 {
+    public static event Action WhenLoaded = () => { };
+    public static TimeSpan FrameDelta { get; private set; } = TimeSpan.Zero;
+
     public const int PIXELS_X = 320;
     public const int PIXELS_Y = 180;
     private const float ASPECT_RATIO = 16f / 9f;
 
+    private readonly List<ISystem> _systems = [];
+
     private readonly float[] _fullscreenQuadVerts =
     [ //  Pos      UV
-        -1, -1,    0, 0,
-         1, -1,    1, 0,
-        -1,  1,    0, 1,
-         1,  1,    1, 1,
+        -1, -1, 0, 0,
+        1, -1, 1, 0,
+        -1, 1, 0, 1,
+        1, 1, 1, 1,
     ];
 
     private Box _viewport;
@@ -29,19 +40,17 @@ public class ShooterGameWindow() : GameWindow(
     private int _fullRectVbo;
     private int _fullRectVao;
 
-    private readonly Camera _cam = new();
 
     // No code in this class should run before `OnLoad()`, so it's safe to ignore nullability.
     private Shader _fboDrawer = null!;
     private Framebuffer _fbo = null!;
-    private EntityRenderer _entityRenderer = null!;
 
     protected override void OnLoad()
     {
         base.OnLoad();
         this.WindowState = WindowState.Maximized;
         this._fbo = new();
-        
+
         this._fullRectVbo = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, this._fullRectVbo);
         GL.BufferData(
@@ -57,17 +66,27 @@ public class ShooterGameWindow() : GameWindow(
         GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 2 * sizeof(float));
 
         this._fboDrawer = new("fbo_drawer");
-        this._entityRenderer = new();
-        Entity test = new Entity()
-        {
-            Scale = (50,50),
-            Pos = (ShooterGameWindow.PIXELS_X / 2f, ShooterGameWindow.PIXELS_Y / 2f)
-        };
-        this._entityRenderer.AddEntity(test);
+        this._systems.Add(new RendererSystem());
+        this._systems.Add(new SpinnyTestSystem());
+
+        _ = EntityQuad.Common;
+
+        ShooterGameWindow.WhenLoaded.Invoke();
+
+        ushort testEntity = BasicRenderableEntity.Create(
+            ShooterGameWindow.PIXELS_X / 2f,
+            ShooterGameWindow.PIXELS_Y / 2f,
+            10,
+            10,
+            0
+        );
+        ushort camera = EntityManager.New();
+        EntityManager.AddComponent(camera, new CameraComponent());
     }
 
     protected override void OnRenderFrame(FrameEventArgs e)
     {
+        double startRender = GLFW.GetTime();
         base.OnRenderFrame(e);
 
         this._fbo.BindFramebuffer();
@@ -75,12 +94,15 @@ public class ShooterGameWindow() : GameWindow(
         GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         GL.Clear(ClearBufferMask.ColorBufferBit);
 
-        this._entityRenderer.Render(this._cam);
+        foreach (ISystem system in this._systems)
+        {
+            system.Update(Time.Delta);
+        }
 
         this._fbo.UnbindFramebuffer();
 
         GL.Viewport(this._viewport.X, this._viewport.Y, this._viewport.W, this._viewport.H);
-        GL.ClearColor(0,0,0,1);
+        GL.ClearColor(0, 0, 0, 1);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         this._fboDrawer.Use();
         this._fbo.BindTexture();
@@ -92,6 +114,7 @@ public class ShooterGameWindow() : GameWindow(
         GL.EnableVertexAttribArray(1);
         GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
 
+        ShooterGameWindow.FrameDelta = TimeSpan.FromSeconds(GLFW.GetTime() - startRender);
         this.SwapBuffers();
     }
 

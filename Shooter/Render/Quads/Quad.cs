@@ -16,7 +16,8 @@ public abstract class Quad
 
     protected abstract float[] GetVertices();
     protected abstract void BindAttribs();
-    
+
+
     protected Quad()
     {
         this.VaoId = GL.GenVertexArray();
