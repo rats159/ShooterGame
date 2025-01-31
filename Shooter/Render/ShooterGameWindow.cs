@@ -2,12 +2,11 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using Shooter.Assets;
 using Shooter.ECS;
 using Shooter.ECS.Components;
-using Shooter.ECS.Prefabs;
 using Shooter.ECS.Systems;
 using Shooter.Levels;
-using Shooter.Render.Quads;
 using Shooter.Structures;
 using Shooter.Render.Shaders;
 using Shooter.Utility;
@@ -16,7 +15,7 @@ namespace Shooter.Render;
 
 public class ShooterGameWindow() : GameWindow(
     GameWindowSettings.Default,
-    new() { ClientSize = (ShooterGameWindow.PIXELS_X, ShooterGameWindow.PIXELS_Y), Title = "Shooter" }
+    new() { Title = "Shooter"}
 )
 {
     private double _startRender;
@@ -51,10 +50,11 @@ public class ShooterGameWindow() : GameWindow(
     protected override void OnLoad()
     {
         base.OnLoad();
-        this.WindowState = WindowState.Maximized;
+        AssetManager.Load();
         this.VSync = VSyncMode.On;
+        this.WindowState = WindowState.Maximized;
         this._fbo = new();
-
+        
         this._fullRectVbo = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, this._fullRectVbo);
         GL.BufferData(
@@ -69,15 +69,13 @@ public class ShooterGameWindow() : GameWindow(
         GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
         GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 2 * sizeof(float));
 
-        this._fboDrawer = new("fbo_drawer");
-        this._systems.Add(new RendererSystem());
-
-        _ = EntityQuad.Common;
-
+        this._fboDrawer = AssetManager.GetShader("fbo_drawer");
+        
+        this._systems.Add(new EntityRendererSystem());
+        this._systems.Add(new LevelRendererSystem());
+        
         ShooterGameWindow.WhenLoaded.Invoke();
-
-        Texture tex = new("face");
-
+        
         ushort camera = EntityManager.New();
         EntityManager.AddComponent(camera, new CameraComponent());
         
@@ -96,7 +94,6 @@ public class ShooterGameWindow() : GameWindow(
     protected override void OnRenderFrame(FrameEventArgs e)
     {
         ShooterGameWindow.FrameDelta = TimeSpan.FromSeconds(GLFW.GetTime() - this._startRender);
-        Console.WriteLine(FrameDelta.TotalMilliseconds);
         this._startRender = GLFW.GetTime();
         base.OnRenderFrame(e);
 

@@ -1,24 +1,29 @@
 using OpenTK.Graphics.OpenGL;
+using Shooter.Assets;
 
 namespace Shooter.Render.Quads;
 
 public class EntityQuad : Quad
 {
-    static EntityQuad()
-    {
-        Console.WriteLine("static constructor!");
-        ShooterGameWindow.WhenLoaded += EntityQuad.LoadEvent;
-    }
-
-    private static void LoadEvent()
-    {
-        Console.WriteLine("HELLO!");
-        EntityQuad.Common = new();
-        ShooterGameWindow.WhenLoaded -= EntityQuad.LoadEvent;
-    }
-
+    private static EntityQuad? _common;
+    
     // Most entities can share a quad
-    public static EntityQuad Common { get; private set; } = null!;
+    public static EntityQuad Common
+    {
+        get
+        {
+            if (EntityQuad._common != null) return EntityQuad._common;
+            
+            if (!AssetManager.Loaded)
+            {
+                throw new("EntityQuad.Common attempted to be read before window loaded.");
+            }
+
+            EntityQuad._common = new();
+
+            return EntityQuad._common;
+        }
+    }
 
     protected override float[] GetVertices()
     {

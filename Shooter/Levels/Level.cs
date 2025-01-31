@@ -1,4 +1,5 @@
-﻿using Shooter.ECS;
+﻿using Shooter.Assets;
+using Shooter.ECS;
 using Shooter.ECS.Components;
 using Shooter.Render.Quads;
 using Shooter.Structures;
@@ -25,12 +26,9 @@ public class Level
         foreach (Box box in level._structure)
         {
             ushort ent = EntityManager.New();
-            EntityManager.AddComponent(ent, new QuadComponent(EntityQuad.Common));
-            EntityManager.AddComponent(ent, new PositionComponent(box.X, box.Y));
-            EntityManager.AddComponent(ent, new ScaleComponent(box.W, box.H));
-            EntityManager.AddComponent(ent, new RotationComponent());
-            EntityManager.AddComponent(ent, new TextureComponent(new("face")));
-            EntityManager.AddComponent(ent, new RenderComponent());
+            EntityManager.AddComponent(ent, new TransformComponent(box));
+            EntityManager.AddComponent(ent, new TextureComponent(AssetManager.GetTexture("level")));
+            EntityManager.AddComponent(ent, new LevelRenderComponent(LevelQuad.Common));
         }
     }
 }
