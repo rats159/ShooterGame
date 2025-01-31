@@ -26,12 +26,14 @@ public static class AssetManager
         string shaderPath = Path.Join("resources", "shader");
         string[] verts = Directory.GetFiles(shaderPath, "*.vert");
         string[] frags = Directory.GetFiles(shaderPath, "*.frag");
+        
+        HashSet<string> vertexNames = [..verts.Select(Path.GetFileNameWithoutExtension)!];
+        HashSet<string> fragmentNames = [..frags.Select(Path.GetFileNameWithoutExtension)!];
 
-        if (verts.Length != frags.Length)
+        if (vertexNames.Intersect(fragmentNames).Count() != frags.Length)
         {
             //Bad for performance, but it's fine since we're 99% sure to be crashing
-            HashSet<string> vertexNames = [..verts.Select(Path.GetFileNameWithoutExtension)!];
-            HashSet<string> fragmentNames = [..frags.Select(Path.GetFileNameWithoutExtension)!];
+
             string[] missingVerts = vertexNames.Where(v => !fragmentNames.Contains(v)).ToArray();
             string[] missingFrags = fragmentNames.Where(f => !vertexNames.Contains(f)).ToArray();
 
@@ -40,19 +42,19 @@ public static class AssetManager
             if (missingFrags.Length != 0 && missingVerts.Length != 0)
             {
                 error.AppendLine(
-                    $"Shader Mismatch. Found {missingVerts.Length} vertex shaders and {missingFrags.Length} fragment shaders with no match"
+                    $"Shader Mismatch. Found {missingVerts.Length} vertex shader(s) and {missingFrags.Length} fragment shader(1) with no match"
                 );
             }
             else if (missingFrags.Length != 0)
             {
                 error.AppendLine(
-                    $"Shader Mismatch. Found {missingFrags.Length} fragment shaders with no match"
+                    $"Shader Mismatch. Found {missingFrags.Length} fragment shaders(s) with no match"
                 );
             }
             else
             {
                 error.AppendLine(
-                    $"Shader Mismatch. Found {missingVerts.Length} shaders with no match"
+                    $"Shader Mismatch. Found {missingVerts.Length} shader(s) with no match"
                 );
             }
 
