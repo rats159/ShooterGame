@@ -24,10 +24,10 @@ public class EntityQuad : Quad
     {
         return
         [
-            -.5f, -.5f, 0, 0,
-             .5f, -.5f, 0, 1,
-            -.5f,  .5f, 1, 0,
-             .5f,  .5f, 1, 1
+            0f, 0f, 0, 0,
+            1f, 0f, 0, 1,
+            0f, 1f, 1, 0,
+            1f, 1f, 1, 1
         ];
     }
 

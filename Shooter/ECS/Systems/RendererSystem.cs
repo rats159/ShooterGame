@@ -80,7 +80,7 @@ public class RendererSystem : ISystem
     private static Matrix4 MakeMatrix(float x, float y, float sx, float sy, float degrees)
     {
         Matrix4 mat = Matrix4.CreateScale(sx, sy, 1);
-        mat *= Matrix4.CreateRotationZ((degrees + 90) * 0.01745329f);
+        mat *= Matrix4.CreateRotationZ((degrees) * 0.01745329f);
         mat *= Matrix4.CreateTranslation(x, y, 0);
         return mat;
     }

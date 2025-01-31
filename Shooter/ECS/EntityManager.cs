@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Shooter.Utility;
+﻿using Shooter.Utility;
 
 namespace Shooter.ECS;
 
@@ -19,7 +18,7 @@ public static class EntityManager
     {
         EntityManager._entityMap[id].Add(component);
     }
-
+    
     public static List<ushort> GetWithComponent<T1>() where T1 : IComponent
     {
         List<ushort> ids = [];
@@ -39,10 +38,13 @@ public static class EntityManager
     {
         List<ushort> ids = [];
 
+        // Premature optimization? Maybe!
+        Dictionary<Type, bool> typesFound = [];
+        typesFound.EnsureCapacity(componentTypes.Length);
+        
         foreach ((ushort id, List<IComponent> components) in EntityManager._entityMap)
         {
-            // Premature optimization? Maybe!
-            Dictionary<Type, bool> typesFound = [];
+            typesFound.Clear();
             foreach (Type t in componentTypes)
             {
                 typesFound[t] = false;

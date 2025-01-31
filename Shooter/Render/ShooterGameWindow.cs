@@ -6,6 +6,7 @@ using Shooter.ECS;
 using Shooter.ECS.Components;
 using Shooter.ECS.Prefabs;
 using Shooter.ECS.Systems;
+using Shooter.Levels;
 using Shooter.Render.Quads;
 using Shooter.Structures;
 using Shooter.Render.Shaders;
@@ -70,29 +71,26 @@ public class ShooterGameWindow() : GameWindow(
 
         this._fboDrawer = new("fbo_drawer");
         this._systems.Add(new RendererSystem());
-        this._systems.Add(new SpinnyTestSystem());
 
         _ = EntityQuad.Common;
 
         ShooterGameWindow.WhenLoaded.Invoke();
 
         Texture tex = new("face");
-        
-        for(int j = -3; j < 4; j++)
-        {
-            for (int i = -5; i < 6; i++)
-            {
-                BasicRenderableEntity.Create(
-                    tex,
-                    ShooterGameWindow.PIXELS_X / 2f + i * 32,
-                    ShooterGameWindow.PIXELS_Y / 2f + j * 32,
-                    16,
-                    16
-                );
-            }
-        }
+
         ushort camera = EntityManager.New();
         EntityManager.AddComponent(camera, new CameraComponent());
+        
+        
+        List<Box> testLevelData =
+        [
+            (0, 0, ShooterGameWindow.PIXELS_X, 8),
+            (0, ShooterGameWindow.PIXELS_Y - 8, ShooterGameWindow.PIXELS_X, 8),
+            (ShooterGameWindow.PIXELS_X/2 - 8/2, ShooterGameWindow.PIXELS_Y/2 - 8/2, 8, 8)
+        ];
+
+        Level testLevel = Level.Save(testLevelData);
+        Level.Load(testLevel);
     }
 
     protected override void OnRenderFrame(FrameEventArgs e)
