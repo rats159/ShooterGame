@@ -2,7 +2,7 @@
 
 namespace Shooter.ECS.Components;
 
-public class EntityRenderComponent(EntityQuad quad) : IComponent
+public class EntityRenderable(EntityQuad quad) : IComponent
 {
     public readonly EntityQuad quad = quad;
 }

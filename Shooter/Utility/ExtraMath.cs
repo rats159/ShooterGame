@@ -1,4 +1,5 @@
 ﻿using OpenTK.Mathematics;
+using Shooter.ECS.Components;
 using Shooter.Structures;
 
 namespace Shooter.Utility;

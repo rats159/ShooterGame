@@ -13,17 +13,18 @@ namespace Shooter.ECS.Systems;
 public class EntityRendererSystem : ISystem
 {
     private readonly Shader _shader = AssetManager.GetShader("entity");
-    private readonly Dictionary<ushort, Matrix4> _transformations = [];
-    private readonly Dictionary<ushort, Transform> _cache = [];
+    private readonly Dictionary<Entity, Matrix4> _transformations = [];
+    private readonly Dictionary<Entity, Transform> _cache = [];
 
     public void Update(TimeSpan delta)
     {
-        CameraComponent? camera = EntityManager.GetComponent<CameraComponent>();
-        if (camera == null)
+        if(!EntityManager.ComponentExists<Camera>())
         {
             Console.WriteLine("No camera!");
             return;
         }
+
+        Camera camera = EntityManager.GetComponent<Camera>();
 
 
         this._shader.Use();
@@ -31,23 +32,20 @@ public class EntityRendererSystem : ISystem
         this._shader.Load("u_Proj", camera.Projection);
 
 
-        List<ushort> entities = EntityManager.GetWithComponents(
-            typeof(TransformComponent),
-            typeof(EntityRenderComponent),
-            typeof(TextureComponent)
-        );
+        List<Entity> entities = ComponentQuery.Of<Transform>().And<EntityRenderable>()
+            .And<TextureComponent>().GetEntities();
 
-        IEnumerable<IGrouping<Texture, ushort>> byTexture =
-            entities.GroupBy((id) => EntityManager.GetComponent<TextureComponent>(id)!.texture);
+        IEnumerable<IGrouping<Texture, Entity>> byTexture =
+            entities.GroupBy((ent) => ent.Get<TextureComponent>().texture);
 
-        foreach (IGrouping<Texture, ushort> grouping in byTexture)
+        foreach (IGrouping<Texture, Entity> grouping in byTexture)
         {
             GL.ActiveTexture(TextureUnit.Texture0);
             grouping.Key.Use();
-            foreach (ushort entity in grouping)
+            foreach (Entity entity in grouping)
             {
                 Matrix4 mat = this.GetMatrix(entity);
-                EntityQuad model = EntityManager.GetComponent<EntityRenderComponent>(entity)!.quad;
+                EntityQuad model = EntityManager.GetComponent<EntityRenderable>(entity)!.quad;
 
 
                 GL.BindVertexArray(
@@ -60,16 +58,17 @@ public class EntityRendererSystem : ISystem
         }
     }
 
-    private Matrix4 GetMatrix(ushort entity)
+    private Matrix4 GetMatrix(Entity entity)
     {
-        TypeMap<IComponent> components = EntityManager.GetComponentsDict(entity);
-        Transform transform = components.Get<TransformComponent>().transform;
+        Transform transform = entity.Get<Transform>();
 
-        if (this._cache.TryGetValue(entity, out Transform value) && value == transform)
+        if (this._cache.TryGetValue(entity, out Transform? value) && value == transform)
+        {
             return this._transformations[entity];
-
+        }
+        
         this._transformations[entity] = ExtraMath.TransformationMatrix(transform);
-        this._cache[entity] = transform;
+        this._cache[entity] = new(transform);
 
 
         return this._transformations[entity];

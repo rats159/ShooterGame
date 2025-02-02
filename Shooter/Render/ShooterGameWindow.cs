@@ -6,7 +6,9 @@ using Shooter.Assets;
 using Shooter.ECS;
 using Shooter.ECS.Components;
 using Shooter.ECS.Systems;
+using Shooter.Input;
 using Shooter.Levels;
+using Shooter.Render.Quads;
 using Shooter.Structures;
 using Shooter.Render.Shaders;
 using Shooter.Utility;
@@ -25,7 +27,11 @@ public class ShooterGameWindow() : GameWindow(
 
     public const int PIXELS_X = 320;
     public const int PIXELS_Y = 180;
-    private const float ASPECT_RATIO = 16f / 9f;
+    public static float SCALE_FACTOR_X { get; private set; }
+    public static float SCALE_FACTOR_Y { get; private set; }
+
+    public static int WIDTH;
+    public static int HEIGHT;
 
     private readonly List<ISystem> _systems = [];
 
@@ -71,13 +77,20 @@ public class ShooterGameWindow() : GameWindow(
 
         this._fboDrawer = AssetManager.GetShader("fbo_drawer");
         
-        this._systems.Add(new EntityRendererSystem());
         this._systems.Add(new LevelRendererSystem());
+        this._systems.Add(new EntityRendererSystem());
+        this._systems.Add(new InputTestSystem());
         
         ShooterGameWindow.WhenLoaded.Invoke();
         
-        ushort camera = EntityManager.New();
-        EntityManager.AddComponent(camera, new CameraComponent());
+        Entity camera = EntityManager.New();
+        camera.AddComponent(new Camera());
+
+        Entity mouseFollower = EntityManager.New();
+        mouseFollower.AddComponent(new InputControlled());
+        mouseFollower.AddComponent(new Transform(0,0,16,16,0));
+        mouseFollower.AddComponent(new EntityRenderable(EntityQuad.Common));
+        mouseFollower.AddComponent(new TextureComponent(AssetManager.GetTexture("debug")));
         
         
         List<Box> testLevelData =
@@ -97,6 +110,9 @@ public class ShooterGameWindow() : GameWindow(
         this._startRender = GLFW.GetTime();
         base.OnRenderFrame(e);
 
+        Mouse.State = this.MouseState;
+        Keyboard.State = this.KeyboardState;
+        
         this._fbo.BindFramebuffer();
         GL.Viewport(0, 0, ShooterGameWindow.PIXELS_X, ShooterGameWindow.PIXELS_Y);
         GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -129,21 +145,34 @@ public class ShooterGameWindow() : GameWindow(
     {
         base.OnFramebufferResize(e);
 
-        float windowAspectRatio = (float)e.Width / e.Height;
+        this._viewport = (0, 0, e.Width, e.Height);
+        ShooterGameWindow.SCALE_FACTOR_X = ShooterGameWindow.PIXELS_X / (float)e.Width;
+        ShooterGameWindow.SCALE_FACTOR_Y = ShooterGameWindow.PIXELS_Y / (float)e.Height;
+        ShooterGameWindow.WIDTH = e.Width;
+        ShooterGameWindow.HEIGHT = e.Height;
+    }
 
-        int newWidth, newHeight;
+    protected override void OnMouseMove(MouseMoveEventArgs e)
+    {
+        base.OnMouseMove(e);
+        Mouse.OnMouseMove(e);
+    }
 
-        if (windowAspectRatio > ShooterGameWindow.ASPECT_RATIO)
-        {
-            newWidth = (int)(e.Height * ShooterGameWindow.ASPECT_RATIO);
-            newHeight = e.Height;
-        }
-        else
-        {
-            newWidth = e.Width;
-            newHeight = (int)(e.Width / ShooterGameWindow.ASPECT_RATIO);
-        }
+    protected override void OnMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseDown(e);
+        Mouse.OnMouseDown(e);
+    }
 
-        this._viewport = ((e.Width - newWidth) / 2, (e.Height - newHeight) / 2, newWidth, newHeight);
+    protected override void OnMouseUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseUp(e);
+        Mouse.OnMouseUp(e);
+    }
+
+    protected override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        Mouse.OnMouseWheel(e);
     }
 }

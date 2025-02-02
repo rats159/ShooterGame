@@ -25,10 +25,10 @@ public class Level
     {
         foreach (Box box in level._structure)
         {
-            ushort ent = EntityManager.New();
-            EntityManager.AddComponent(ent, new TransformComponent(box));
-            EntityManager.AddComponent(ent, new TextureComponent(AssetManager.GetTexture("level")));
-            EntityManager.AddComponent(ent, new LevelRenderComponent(LevelQuad.Common));
+            Entity ent = EntityManager.New();
+            ent.AddComponent(new Transform(box));
+            ent.AddComponent(new TextureComponent(AssetManager.GetTexture("level")));
+            ent.AddComponent(new LevelRenderComponent(LevelQuad.Common));
         }
     }
 }
