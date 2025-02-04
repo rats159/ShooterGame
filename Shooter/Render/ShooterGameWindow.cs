@@ -82,24 +82,41 @@ public class ShooterGameWindow() : GameWindow(
         this._systems.Add(new LevelRendererSystem());
         this._systems.Add(new EntityRendererSystem());
         this._systems.Add(new InputTestSystem());
+        this._systems.Add(new VerletSystem());
+        this._systems.Add(new VerletRendererSystem());
         
         ShooterGameWindow.WhenLoaded.Invoke();
         
         Entity camera = EntityManager.New();
         camera.AddComponent(new Camera());
 
-        Entity mouseFollower = EntityManager.New();
-        mouseFollower.AddComponent(new InputControlled());
-        mouseFollower.AddComponent(new Transform(0,0,16,16,0));
-        mouseFollower.AddComponent(new EntityRenderable(EntityQuad.Common));
-        mouseFollower.AddComponent(new TextureComponent(AssetManager.GetTexture("debug")));
+        for (int i = 0; i < 10; i++)
+        {
+            Entity e = EntityManager.New();
+            e.AddComponent(new VerletObject(i*16+80,120,8,8));
+            e.AddComponent(new Transform(i*16+80,120,8,8,0));
+        }
+
+        Entity b = EntityManager.New();
+        // collider.AddComponent(new InputControlled());
+        b.AddComponent(new VerletObject(256,120,8,8));
+        b.AddComponent(new Transform(256,120,8,8,0));
+        b.AddComponent(new EntityRenderable(EntityQuad.Common));
+        // b.AddComponent(new TextureComponent(AssetManager.GetTexture("debug")));
+        
+        foreach(VerletPoint point in b.Get<VerletObject>().points)
+            point.prevPosition.Value.X += 0.5f;
+        
+        // a.AddComponent(new TextureComponent(AssetManager.GetTexture("debug")));
+        
+        // c.AddComponent(new TextureComponent(AssetManager.GetTexture("debug")));
         
         
         List<Box> testLevelData =
         [
             (0, 0, ShooterGameWindow.PIXELS_X, 8),
             (0, ShooterGameWindow.PIXELS_Y - 8, ShooterGameWindow.PIXELS_X, 8),
-            (ShooterGameWindow.PIXELS_X/2 - 8/2, ShooterGameWindow.PIXELS_Y/2 - 8/2, 8, 8)
+            (ShooterGameWindow.PIXELS_X/2 - 8/2, ShooterGameWindow.PIXELS_Y/2 - 8/2 - 8, 8, 8)
         ];
 
         Level testLevel = Level.Save(testLevelData);

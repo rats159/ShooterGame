@@ -18,4 +18,16 @@ public static class ExtraMath
     {
         return ExtraMath.TransformationMatrix(transform.X, transform.Y, transform.Width, transform.Height, transform.Degrees);
     }
+
+    public static void Rotate(ref Vector2 src, float degrees)
+    {
+        float sin = MathF.Sin(MathHelper.DegreesToRadians(degrees));
+        float cos = MathF.Cos(MathHelper.DegreesToRadians(degrees));
+
+        float x1 = src.X;
+        float y1 = src.Y;
+        
+        src.X = cos * x1 - sin * y1;
+        src.Y = sin * x1 + cos * y1;
+    }
 }

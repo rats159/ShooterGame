@@ -29,6 +29,22 @@ public class Transform(int x, int y, int width, int height, float degrees) : ICo
         degrees = this.Degrees;
     }
 
+    public void GetTransformedPoints(ref Span<Vector2> data)
+    {
+        float sin = MathF.Sin(MathHelper.DegreesToRadians(this.Degrees));
+        float cos = MathF.Cos(MathHelper.DegreesToRadians(this.Degrees));
+
+        float x = this.X;
+        float y = this.Y;
+        float w = this.Width;
+        float h = this.Height;
+
+        data[0] = (x, y);
+        data[1] = (cos * w + x, sin * w + y);
+        data[2] = (-sin * h + x, cos * h + y);
+        data[3] = (cos * w - sin * h + x, sin * w + cos * h + y);
+    }
+
     private bool Equals(Transform other)
     {
         return this.X == other.X && this.Y == other.Y && this.Width == other.Width && this.Height == other.Height &&

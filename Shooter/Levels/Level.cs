@@ -1,4 +1,5 @@
-﻿using Shooter.Assets;
+﻿using System.Runtime.InteropServices.JavaScript;
+using Shooter.Assets;
 using Shooter.ECS;
 using Shooter.ECS.Components;
 using Shooter.Render.Quads;
@@ -29,6 +30,7 @@ public class Level
             ent.AddComponent(new Transform(box));
             ent.AddComponent(new TextureComponent(AssetManager.GetTexture("level")));
             ent.AddComponent(new LevelRenderComponent(LevelQuad.Common));
+            ent.AddComponent(new VerletObject(box.X,box.Y,box.W,box.H,true));
         }
     }
 }
