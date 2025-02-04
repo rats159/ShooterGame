@@ -112,4 +112,21 @@ public class ComponentQuery
 
         return validIds;
     }
+    
+    public List<T> Get<T>() where T : IComponent
+    {
+        List<T> found = [];
+        List<Entity> allIds = EntityManager.Entities;
+        
+        for (int i = 0; i < this._bits.Count; i++)
+        {
+            if(!this._bits[i]) continue;
+            if (allIds[i].Has<T>())
+            {
+                found.Add(allIds[i].Get<T>());
+            }
+        }
+
+        return found;
+    }
 }

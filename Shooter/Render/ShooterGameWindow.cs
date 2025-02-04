@@ -8,6 +8,8 @@ using Shooter.ECS.Components;
 using Shooter.ECS.Systems;
 using Shooter.Input;
 using Shooter.Levels;
+using Shooter.Physics;
+using Shooter.Render.Debug;
 using Shooter.Render.Quads;
 using Shooter.Structures;
 using Shooter.Render.Shaders;
@@ -117,11 +119,12 @@ public class ShooterGameWindow() : GameWindow(
         GL.Viewport(0, 0, ShooterGameWindow.PIXELS_X, ShooterGameWindow.PIXELS_Y);
         GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         GL.Clear(ClearBufferMask.ColorBufferBit);
-
+        
         foreach (ISystem system in this._systems)
         {
             system.Update(Time.Delta);
         }
+
 
         this._fbo.UnbindFramebuffer();
 
@@ -137,6 +140,14 @@ public class ShooterGameWindow() : GameWindow(
         GL.EnableVertexAttribArray(0);
         GL.EnableVertexAttribArray(1);
         GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+        
+        List<Camera> cameras = ComponentQuery.Of<Camera>().Get<Camera>();
+        if (cameras.Count != 0)
+        {
+            Camera camera = cameras.First();
+
+            DebugDrawer.Render(camera);
+        }
         
         this.SwapBuffers();
     }
