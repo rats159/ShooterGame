@@ -1,9 +1,6 @@
-using System.Threading.Tasks.Dataflow;
-using System.Xml.Schema;
 using OpenTK.Mathematics;
 using Shooter.ECS;
 using Shooter.ECS.Components;
-using Shooter.Utility;
 
 namespace Shooter.Physics;
 
@@ -52,16 +49,18 @@ public static class SAT
         if (hitEdge?.parent != bCollider)
         {
             (bCollider, aCollider) = (aCollider, bCollider);
+            bestNormal = -bestNormal; // Invert the normal direction
         }
 
         VerletPoint closestVertex = aCollider.points[0];
         
         
-        float smallestD = 10000.0f; //Initialize the smallest distance to a high value
+        float smallestD = Single.PositiveInfinity;
 
         for (int i = 0; i < 4; i++)
         {
-            float distance = (bestNormal * (aCollider.points[i].position.Value - bCollider.Center)).Length;
+            float distance = Vector2.Dot(bestNormal, aCollider.points[i].position.Value - bCollider.Center);
+            //float distance = (bestNormal * (aCollider.points[i].position.Value - bCollider.Center)).Length;
 
             if (distance < smallestD)
             {

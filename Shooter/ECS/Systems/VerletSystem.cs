@@ -1,8 +1,10 @@
 using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Shooter.ECS.Components;
 using Shooter.Input;
 using Shooter.Physics;
+using Shooter.Render.Debug;
 using Shooter.Utility;
 
 namespace Shooter.ECS.Systems;
@@ -17,15 +19,14 @@ public class VerletSystem : ISystem
 
     public void Update(TimeSpan delta)
     {
-        if (!Keyboard.IsKeyDown(Keys.Space)) return;
-        
         List<Entity> entities = ComponentQuery.Of<VerletObject>().And<Transform>().GetEntities();
 
         foreach (Entity entity in entities)
         {
             VerletObject verletData = entity.Get<VerletObject>();
 
-            if (!verletData.isStatic) {
+            if (!verletData.isStatic)
+            {
                 float trueDelta = (float)delta.TotalSeconds;
                 for (int i = 0; i < VerletSystem.SIM_SUBSTEPS; i++)
                 {
@@ -34,6 +35,10 @@ public class VerletSystem : ISystem
                         VerletSystem.ApplyGravity(point);
                         VerletSystem.UpdatePosition(point, trueDelta / VerletSystem.SIM_SUBSTEPS);
                     }
+                }
+                foreach (VerletPoint p in verletData.points)
+                {
+                    DebugDrawer.DrawPoint(p.position.Value,(0,0,1));
                 }
 
                 for (int i = 0; i < VerletSystem.COLLISION_SUBSTEPS; i++)
@@ -99,16 +104,20 @@ public class VerletSystem : ISystem
 
         verlet.acceleration.Value = Vector2.Zero;
     }
-
+    
     private static void ProcessCollision(VerletObject self, VerletObject hitObject, ref CollisionData info)
     {
-        if (self.isStatic) return;
-
-
-        if (info.HitEdge.parent != hitObject)
+        if (self.isStatic)
         {
-            (self, hitObject) = (hitObject, self);
+            return;
         }
+        
+        DebugDrawer.Erase();
+        
+        DebugDrawer.DrawLine(info.HitEdge.start.Value,info.HitEdge.end.Value,(1,0,0));
+
+        Vector2 edgeMidpoint = (info.HitEdge.start.Value + info.HitEdge.end.Value) / 2;
+        DebugDrawer.DrawLine(edgeMidpoint,edgeMidpoint + info.Normal * 4,(0,1,0));
         
 
         Vector2 collisionVector = info.Normal * info.Depth;
@@ -125,9 +134,7 @@ public class VerletSystem : ISystem
             t = (info.HitVert.position.Value.X - collisionVector.X - hitEdgeStart.X) / (hitEdgeEnd.X - hitEdgeStart.X);
         else
             t = (info.HitVert.position.Value.Y - collisionVector.Y - hitEdgeStart.Y) / (hitEdgeEnd.Y - hitEdgeStart.Y);
-
-        Console.WriteLine(t);
-
+        
         float lambda = 1.0f / (t * t + (1 - t) * (1 - t));
         if (t == 0) lambda = 0;
         
@@ -138,8 +145,7 @@ public class VerletSystem : ISystem
         }
         else
         {
-            info.HitVert.position.Value += collisionVector;
+            info.HitVert.position.Value -= collisionVector;
         }
-
     }
 }

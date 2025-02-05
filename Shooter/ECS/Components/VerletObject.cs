@@ -1,5 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
-using OpenTK.Graphics.Vulkan;
 using OpenTK.Mathematics;
 using Shooter.Physics;
 
@@ -44,6 +42,7 @@ public class VerletObject : IComponent
             new(this, this.v2.position, this.v3.position),
             new(this, this.v3.position, this.v0.position),
             new(this, this.v0.position, this.v2.position),
+            new(this, this.v1.position, this.v3.position),
         ];
         this.isStatic = isStatic;
 

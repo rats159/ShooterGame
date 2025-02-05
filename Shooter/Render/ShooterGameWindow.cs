@@ -1,4 +1,6 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using System.ComponentModel;
+using System.Diagnostics;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -14,6 +16,8 @@ using Shooter.Render.Quads;
 using Shooter.Structures;
 using Shooter.Render.Shaders;
 using Shooter.Utility;
+using StbImageSharp;
+using StbImageWriteSharp;
 
 namespace Shooter.Render;
 
@@ -22,6 +26,7 @@ public class ShooterGameWindow() : GameWindow(
     new() { Title = "Shooter"}
 )
 {
+    private const bool SAVE_FRAMES_TO_VIDEO = false; 
     private double _startRender;
     
     public static event Action WhenLoaded = () => { };
@@ -50,6 +55,11 @@ public class ShooterGameWindow() : GameWindow(
     private int _fullRectVbo;
     private int _fullRectVao;
 
+    private Pool<byte[]> _pixelPool;
+
+    public static int FrameCount { get; private set; } = 0;
+
+
 
     // No code in this class should run before `OnLoad()`, so it's safe to ignore nullability.
     private Shader _fboDrawer = null!;
@@ -58,6 +68,14 @@ public class ShooterGameWindow() : GameWindow(
     protected override void OnLoad()
     {
         base.OnLoad();
+
+        Directory.CreateDirectory("frames");
+        Directory.CreateDirectory("video");
+        foreach (string file in Directory.GetFiles("frames"))
+        {
+            File.Delete(file);
+        }
+        
         AssetManager.Load();
         this.VSync = VSyncMode.On;
         this.WindowState = WindowState.Maximized;
@@ -77,6 +95,9 @@ public class ShooterGameWindow() : GameWindow(
         GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
         GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 2 * sizeof(float));
 
+        if(SAVE_FRAMES_TO_VIDEO)
+            this._pixelPool = new(()=>new byte[this.ClientSize.X * this.ClientSize.Y * 4],10);
+        
         this._fboDrawer = AssetManager.GetShader("fbo_drawer");
         
         this._systems.Add(new LevelRendererSystem());
@@ -123,6 +144,30 @@ public class ShooterGameWindow() : GameWindow(
         Level.Load(testLevel);
     }
 
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if(SAVE_FRAMES_TO_VIDEO)
+            this.SaveVideo();
+        base.OnClosing(e);
+    }
+
+    private void SaveVideo()
+    {
+        File.Delete("video/out.mp4");
+        const string ffmpegPath = "ffmpeg";
+        const string arguments = "-framerate 60 -i frames/frame-%05d.png video/out.mp4";
+
+        ProcessStartInfo startInfo = new()
+        {
+            FileName = ffmpegPath,
+            Arguments = arguments,
+            UseShellExecute = true
+        };
+        
+        using Process? process = Process.Start(startInfo); 
+        process?.WaitForExit();
+    }
+    
     protected override void OnRenderFrame(FrameEventArgs e)
     {
         ShooterGameWindow.FrameDelta = TimeSpan.FromSeconds(GLFW.GetTime() - this._startRender);
@@ -166,9 +211,40 @@ public class ShooterGameWindow() : GameWindow(
             DebugDrawer.Render(camera);
         }
         
+        if(SAVE_FRAMES_TO_VIDEO)
+            this.SaveFrame();
         this.SwapBuffers();
+        FrameCount++;
     }
 
+    private void SaveFrame()
+    {
+        byte[] pixels = this._pixelPool.GetAndBusy();
+        GL.ReadPixels(0,0,this.ClientSize.X,this.ClientSize.Y,PixelFormat.Rgba,PixelType.UnsignedByte, pixels);
+        Task.Run(() =>
+        {
+            FileStream? stream = null;
+            try
+            {
+                stream = new($"frames/frame-{ShooterGameWindow.FrameCount.ToString().PadLeft(5, '0')}.png",
+                    FileMode.OpenOrCreate);
+            
+                new ImageWriter().WritePng(pixels,
+                    this.ClientSize.X,
+                    this.ClientSize.Y,
+                    StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha,
+                    stream);
+            }
+            finally
+            {
+                this._pixelPool.Unbusy(pixels);
+                stream?.Close();
+            }
+
+            
+        });
+    }
+    
     protected override void OnFramebufferResize(FramebufferResizeEventArgs e)
     {
         base.OnFramebufferResize(e);
@@ -180,7 +256,7 @@ public class ShooterGameWindow() : GameWindow(
         ShooterGameWindow.HEIGHT = e.Height;
     }
 
-    protected override void OnMouseMove(MouseMoveEventArgs e)
+    protected override void OnMouseMove(OpenTK.Windowing.Common.MouseMoveEventArgs e)
     {
         base.OnMouseMove(e);
         Mouse.OnMouseMove(e);
